@@ -70,3 +70,8 @@ async def webhook(request: Request, backgroundtask: BackgroundTasks):
 
     # LINEサーバーへHTTP応答
     return "OK"
+
+# ヘルスチェック用
+@app.get("/health")
+def health():
+    return {"status": "ok"}
