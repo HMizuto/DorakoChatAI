@@ -47,14 +47,20 @@ def get_conn():
 # 質問の embedding
 # ----------------------------------------
 def get_embedding(text: str):
-    client = OpenAI(api_key=config.OPENAI_API_KEY)
+    try:
+        client = OpenAI(api_key=config.OPENAI_API_KEY)
+        
+        print("Embedding対象:", text)
 
-    res = client.embeddings.create(
-        model="text-embedding-3-small",
-        input=text
-    )
-    return res.data[0].embedding
+        res = client.embeddings.create(
+            model="text-embedding-3-small",
+            input=text
+        )
+        return res.data[0].embedding
 
+    except Exception as e:
+        print("🔥 embeddingエラー:", e)
+        raise
 
 # ----------------------------------------
 # 類似検索
