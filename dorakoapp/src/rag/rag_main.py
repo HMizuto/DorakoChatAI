@@ -67,10 +67,12 @@ def get_embedding(text: str):
 # ----------------------------------------
 def search_similar_chunks(question, top_k=1, threshold=0.25):
     embedding = get_embedding(question)
-    embedding_str = "[" + ",".join(map(str, embedding)) + "]"
+    # embedding_str = "[" + ",".join(map(str, embedding)) + "]"
 
     conn = get_conn()
     cur = conn.cursor()
+
+    print("embedding次元:", len(embedding))
 
     cur.execute("""
         SELECT
@@ -80,7 +82,7 @@ def search_similar_chunks(question, top_k=1, threshold=0.25):
         FROM qa_vectors
         ORDER BY distance
         LIMIT %s
-    """, (embedding_str, top_k))
+    """, (embedding, top_k))
 
     rows = cur.fetchall()
     conn.close()
