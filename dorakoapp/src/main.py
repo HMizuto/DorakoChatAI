@@ -62,6 +62,7 @@ async def webhook(request: Request, backgroundtask: BackgroundTasks):
         logger.error("Invalid signature")
         return "Invalid signature", 40
     except Exception as e:
+        
         logger.error(f"Parse error: {str(e)}")
         return "Parse error", 400
 

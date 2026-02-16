@@ -79,6 +79,10 @@ def search_similar_chunks(question, top_k=1, threshold=0.25):
     rows = cur.fetchall()
     conn.close()
 
+    print("==== 生検索結果 ====")
+    for r in rows:
+        print("distance:", r[2])
+    
     results = [
             {"question": r[0], "answer": r[1], "distance": r[2]}
             for r in rows if r[2] <= threshold
@@ -141,8 +145,6 @@ def answer_question(user_id: str, question: str):
 # Non-RAG 通常チャット
 # ----------------------------------------
 def chat_with_ai_with_history(user_id: str, user_text: str):
-    # ① ユーザー発言を保存
-    ConversationService.save_message(user_id, "user", user_text)
     history = ConversationService.get_recent_messages(user_id)
 
     client = OpenAI(api_key=config.OPENAI_API_KEY)
@@ -166,9 +168,6 @@ def chat_with_ai_with_history(user_id: str, user_text: str):
     )
 
     answer = response.output_text
-
-    ConversationService.save_message(user_id, "assistant", answer)
-
     return answer
 
 
