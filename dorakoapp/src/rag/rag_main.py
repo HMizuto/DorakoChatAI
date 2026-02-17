@@ -78,7 +78,7 @@ def search_similar_chunks(question, top_k=1, threshold=0.25):
         SELECT
             question,
             answer,
-            embedding <=> %s AS distance
+            embedding <=> %s::vector AS distance
         FROM qa_vectors
         ORDER BY distance
         LIMIT %s
