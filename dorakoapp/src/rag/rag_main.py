@@ -66,37 +66,41 @@ def get_embedding(text: str):
 # 類似検索
 # ----------------------------------------
 def search_similar_chunks(question, top_k=1, threshold=0.25):
-    embedding = get_embedding(question)
-    # embedding_str = "[" + ",".join(map(str, embedding)) + "]"
-
-    conn = get_conn()
-    cur = conn.cursor()
-
-    print("embedding次元:", len(embedding))
-
-    cur.execute("""
-        SELECT
-            question,
-            answer,
-            embedding <=> %s::vector AS distance
-        FROM qa_vectors
-        ORDER BY distance
-        LIMIT %s
-    """, (embedding, top_k))
-
-    rows = cur.fetchall()
-    conn.close()
-
-    print("==== 生検索結果 ====")
-    for r in rows:
-        print("distance:", r[2])
     
-    results = [
-            {"question": r[0], "answer": r[1], "distance": r[2]}
-            for r in rows if r[2] <= threshold
-    ]
-    return results
+    try:
+        embedding = get_embedding(question)
+        # embedding_str = "[" + ",".join(map(str, embedding)) + "]"
 
+        conn = get_conn()
+        cur = conn.cursor()
+
+        print("embedding次元:", len(embedding))
+
+        cur.execute("""
+            SELECT
+                question,
+                answer,
+                embedding <=> %s::vector AS distance
+            FROM qa_vectors
+            ORDER BY distance
+            LIMIT %s
+        """, (embedding, top_k))
+
+        rows = cur.fetchall()
+        conn.close()
+
+        print("==== 生検索結果 ====")
+        for r in rows:
+            print("distance:", r[2])
+    
+        results = [
+                {"question": r[0], "answer": r[1], "distance": r[2]}
+                for r in rows if r[2] <= threshold
+        ]
+        return results
+    except Exception as e:
+        print("serch_similar_chunks エラー", e)
+        return []
 
 # ----------------------------------------
 # RAG 回答生成（最新 API）
