@@ -5,6 +5,7 @@ from linebot.models import MessageEvent, TextMessage, TextSendMessage
 from logging_config.log_config import setup_logger
 from rag.rag_main import answer_question, chat_with_ai_with_history
 from classifiers.message_classifier import ClassifierService
+from memory.staff_service import upsert_staff
 import config
 
 # ロガー呼び出し
@@ -25,6 +26,10 @@ async def handle_events(events):
         if isinstance(event, MessageEvent) and isinstance(event.message, TextMessage):
             user_text = event.message.text
             user_id = event.source.user_id   # ★追加
+            
+            # スタッフ登録・更新
+            profile = line_bot_api.get_profile(user_id)
+            upsert_staff(user_id, profile.display_name)
 
             input_type = classifier.classify(user_text)
 
