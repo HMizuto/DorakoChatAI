@@ -32,11 +32,17 @@ async def handle_events(events):
             upsert_staff(user_id, profile.display_name)
 
             input_type = classifier.classify(user_text)
+            logger.info(f"input_type: {input_type} / user_id: {user_id}")
 
-            # ★ 継続会話対応
             if input_type == "QUESTION":
                 answer = answer_question(user_id, user_text)
-            else:
+            elif input_type == "CONSULTATION":
+                # ③エスカレーション実装時にここを差し替える
+                answer = chat_with_ai_with_history(user_id, user_text)
+            elif input_type == "REPORT":
+                # ③エスカレーション実装時にここを差し替える
+                answer = chat_with_ai_with_history(user_id, user_text)
+            else:  # CHAT / OTHER
                 answer = chat_with_ai_with_history(user_id, user_text)
 
             line_bot_api.reply_message(
