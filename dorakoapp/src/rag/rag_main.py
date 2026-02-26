@@ -12,6 +12,7 @@ from openai import OpenAI
 import config as config
 from memory.conversation_store import ConversationService
 from pathlib import Path
+from memory.escalation_service import save_escalation
 # ベースプロンプト読み込み
 
 
@@ -117,6 +118,7 @@ def answer_question(user_id: str, question: str):
 
     # ④ RAGなし → 通常会話
     if not chunks:
+        save_escalation(user_id, "", question, "RAG_MISS")  # display_nameはここでは取れないので空
         answer = chat_with_ai_with_history(user_id, question)
         ConversationService.save_message(user_id, "assistant", answer)
         return answer

@@ -6,6 +6,7 @@ from logging_config.log_config import setup_logger
 from rag.rag_main import answer_question, chat_with_ai_with_history
 from classifiers.message_classifier import ClassifierService
 from memory.staff_service import upsert_staff
+from memory.escalation_service import save_escalation
 import config
 
 # ロガー呼び出し
@@ -37,10 +38,10 @@ async def handle_events(events):
             if input_type == "QUESTION":
                 answer = answer_question(user_id, user_text)
             elif input_type == "CONSULTATION":
-                # ③エスカレーション実装時にここを差し替える
+                save_escalation(user_id, profile.display_name, user_text, "CONSULTATION")
                 answer = chat_with_ai_with_history(user_id, user_text)
             elif input_type == "REPORT":
-                # ③エスカレーション実装時にここを差し替える
+                save_escalation(user_id, profile.display_name, user_text, "REPORT")
                 answer = chat_with_ai_with_history(user_id, user_text)
             else:  # CHAT / OTHER
                 answer = chat_with_ai_with_history(user_id, user_text)
