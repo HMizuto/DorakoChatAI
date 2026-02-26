@@ -135,7 +135,12 @@ def answer_question(user_id: str, question: str):
         *history,
         {
             "role": "system",
-            "content": [{"type": "input_text", "text": f"以下は知識ベースです。無関係なら無視してください。\n{context_text}"}]
+            "content": [{"type": "input_text", "text": f""""以下の知識ベースを参照して回答してください。
+【重要】
+- 知識ベースに答えがある場合は、その内容を根拠にして回答してください
+- 知識ベースに書かれていないことは補足・推測・拡張しないでください
+- ただしBASE_PROMPTのTone&Styleに従って、自然な言葉で伝えてください
+{context_text}"""}]
         },
         {"role": "user", "content": [{"type": "input_text", "text": question}]}
     ]
