@@ -1,11 +1,49 @@
 services:
+
+  # ============================================================
+  # 【ローカル DB】pgvector 付き PostgreSQL
+  # AWS RDS に切り替える場合は、この db ブロック全体をコメントアウト
+  # ============================================================
+  db:
+    image: pgvector/pgvector:pg16
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       ${PG_DB}
+      POSTGRES_USER:     ${PG_USER}
+      POSTGRES_PASSWORD: ${PG_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PG_USER} -d ${PG_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   web:
     build: .
+    restart: unless-stopped
     ports:
       - "8000:8000"
     volumes:
       - ./dorakoapp:/code/dorakoapp
-    environment:
-      - DEBUG=True
     env_file:
       - .env
+    # ローカル開発用に --reload を有効化（本番デプロイ時は削除）
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+    # ============================================================
+    # 【ローカル DB 使用時】depends_on を有効にする
+    # AWS RDS に切り替える場合はこの depends_on ブロックをコメントアウト
+    # ============================================================
+    depends_on:
+      db:
+        condition: service_healthy
+
+# ============================================================
+# 【ローカル DB 使用時】volumes を有効にする
+# AWS RDS に切り替える場合はこの volumes ブロックをコメントアウト
+# ============================================================
+volumes:
+  postgres_data:

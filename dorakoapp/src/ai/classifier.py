@@ -1,15 +1,15 @@
-# services/classifier_service.py
 from openai import OpenAI
-import config
+from core.config import Config
 
-class ClassifierService:
 
-    def __init__(self):
-        self.client = OpenAI(api_key=config.OPENAI_API_KEY)
+class MessageClassifier:
+    def __init__(self, config: Config):
+        self._client = OpenAI(api_key=config.openai_api_key)
+        self._model  = config.openai_model_chat
 
     def classify(self, text: str) -> str:
-        res = self.client.responses.create(
-            model="gpt-4o-mini",
+        res = self._client.responses.create(
+            model=self._model,
             input=[
                 {
                     "role": "system",
