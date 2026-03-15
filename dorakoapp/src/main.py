@@ -10,10 +10,12 @@ from repositories.user_repository import UserRepository
 from repositories.escalation_repository import EscalationRepository
 from repositories.conversation_repository import ConversationRepository
 from repositories.qa_repository import QARepository
+from repositories.group_settings_repository import GroupSettingsRepository
 from ai.classifier import MessageClassifier
 from ai.rag_service import RAGService
 from ai.chat_service import ChatService
 from ai.qa_updater import QAUpdater
+from ai.continuity_checker import ConversationContinuityChecker
 from line.messenger import LineMessenger
 from handlers.group_handler import GroupEventHandler
 from handlers.direct_handler import DirectMessageHandler
@@ -34,10 +36,12 @@ qa_repo      = QARepository(db)
 classifier   = MessageClassifier(settings)
 rag_service  = RAGService(qa_repo, conv_repo, settings)
 chat_service = ChatService(conv_repo, settings)
-qa_updater   = QAUpdater(qa_repo, settings)
-messenger    = LineMessenger(settings)
+qa_updater           = QAUpdater(qa_repo, settings)
+group_settings_repo  = GroupSettingsRepository(db)
+continuity_checker   = ConversationContinuityChecker(group_settings_repo)
+messenger            = LineMessenger(settings)
 
-group_handler  = GroupEventHandler(user_repo, esc_repo, classifier, rag_service, chat_service, messenger, logger)
+group_handler  = GroupEventHandler(user_repo, esc_repo, conv_repo, classifier, rag_service, chat_service, continuity_checker, messenger, logger)
 direct_handler = DirectMessageHandler(user_repo, qa_updater, messenger, logger)
 
 # ======================
@@ -52,6 +56,12 @@ parser       = WebhookParser(settings.line_channel_secret)
 #  バックグラウンド処理
 # ======================
 async def handle_events(events):
+    """バックグラウンド処理
+    
+    Args:
+        events
+    """
+    
     for event in events:
         if not (isinstance(event, MessageEvent) and isinstance(event.message, TextMessage)):
             continue

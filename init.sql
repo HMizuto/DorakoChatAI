@@ -37,24 +37,54 @@ CREATE TABLE IF NOT EXISTS qa_vectors (
 
 -- ----------------------------------------
 -- エスカレーションテーブル
--- reason: 'RAG_MISS' | 'CONSULTATION' | 'REPORT'
+-- reason:  'RAG_MISS' | 'CONSULTATION' | 'REPORT'
+-- status:  'OPEN' | 'RESOLVED'
 -- ----------------------------------------
 CREATE TABLE IF NOT EXISTS escalations (
-    id           SERIAL PRIMARY KEY,
-    line_user_id TEXT,
-    display_name TEXT,
-    message      TEXT,
-    reason       TEXT,
-    created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    id              SERIAL PRIMARY KEY,
+    line_user_id    TEXT,
+    display_name    TEXT,
+    message         TEXT,
+    reason          TEXT,
+    status          TEXT        NOT NULL DEFAULT 'OPEN',
+    group_id        TEXT,
+    resolved_at     TIMESTAMPTZ,
+    resolved_by     TEXT,
+    executive_reply TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE INDEX IF NOT EXISTS idx_escalations_group_status
+    ON escalations (group_id, status);
+
 -- ----------------------------------------
--- 会話ログテーブル（会話履歴管理用）
+-- 会話ログテーブル
+-- role(1on1): 'user' | 'assistant'
+-- role(group): 'staff' | 'executive'
+-- group_id が NULL の行 = 1on1 AI 会話履歴
+-- group_id が SET  の行 = グループ会話記録（継続判定用）
 -- ----------------------------------------
 CREATE TABLE IF NOT EXISTS conversation_logs (
     id           SERIAL PRIMARY KEY,
     line_user_id TEXT,
     role         TEXT,
     message      TEXT,
+    group_id     TEXT,
+    display_name TEXT,
     created_at   TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_conv_logs_group
+    ON conversation_logs (group_id, created_at DESC);
+
+-- ----------------------------------------
+-- グループ設定テーブル
+-- bot_mode: 'ACTIVE' | 'SILENT'
+-- ACTIVE = BOTが応答する（初期状態）
+-- SILENT = 幹部対応中のためBOTはログ保存のみ
+-- ----------------------------------------
+CREATE TABLE IF NOT EXISTS group_settings (
+    group_id   TEXT PRIMARY KEY,
+    bot_mode   TEXT        NOT NULL DEFAULT 'ACTIVE',
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
